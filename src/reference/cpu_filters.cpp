@@ -60,6 +60,7 @@ std::vector<PointXYZIRT> voxelDownsample(const std::vector<PointXYZIRT>& in,
       a.ring = p.ring;
     } else {
       a.min_time = std::min(a.min_time, p.time);
+      a.ring = std::min(a.ring, p.ring);
     }
     a.x += p.x; a.y += p.y; a.z += p.z;
     a.intensity += p.intensity;
