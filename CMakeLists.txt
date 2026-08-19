@@ -30,6 +30,7 @@ add_library(gpulidar_cuda
   src/cuda/undistort.cu
   src/cuda/crop_box.cu
   src/cuda/voxel_grid.cu
+  src/cuda/pipeline.cu
 )
 target_include_directories(gpulidar_cuda PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(gpulidar_cuda PUBLIC gpulidar_core)
@@ -45,6 +46,9 @@ target_link_libraries(kitti_probe PRIVATE gpulidar_core)
 
 add_executable(bench_bandwidth tools/bench_bandwidth.cu)
 target_link_libraries(bench_bandwidth PRIVATE gpulidar_cuda)
+
+add_executable(bench_pipeline tools/bench_pipeline.cu)
+target_link_libraries(bench_pipeline PRIVATE gpulidar_cuda)
 
 add_executable(bench_voxel tools/bench_voxel.cu)
 target_link_libraries(bench_voxel PRIVATE gpulidar_cuda)
