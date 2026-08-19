@@ -26,3 +26,7 @@ add_test(NAME gpu_crop COMMAND test_gpu_crop)
 add_executable(test_gpu_voxel test_gpu_voxel.cu)
 target_link_libraries(test_gpu_voxel PRIVATE gpulidar_cuda GTest::gtest_main)
 add_test(NAME gpu_voxel COMMAND test_gpu_voxel)
+
+add_executable(test_gpu_pillar test_gpu_pillar.cu)
+target_link_libraries(test_gpu_pillar PRIVATE gpulidar_cuda GTest::gtest_main)
+add_test(NAME gpu_pillar COMMAND test_gpu_pillar)

@@ -5,8 +5,14 @@ voxel downsampling, chained on the GPU with no host round-trip between stages.
 Validated against CPU reference implementations and benchmarked for tail latency
 on 5,316 real KITTI frames.
 
-    raw sweep -> undistort -> crop box -> voxel downsample -> BEV-ready cloud
-                (ego-motion)  (ROI+ego)    (hash grid)
+    raw sweep -> undistort -> crop box -+-> voxel downsample -> downsampled cloud
+                (ego-motion)  (ROI+ego)   |    (hash grid)
+                                          +-> pillar scatter -> (P, 32, 9) tensor
+                                               (dense grid)
+
+Voxel downsampling and pillar scatter are parallel consumers of the cropped
+cloud, not a chain: a PointPillars encoder takes raw points, not voxel
+centroids.
 
 ## Headline result
 
@@ -70,6 +76,14 @@ optimization claim smaller than 12% is noise here. Timing validation belongs on
 a dedicated Linux host with locked clocks; these numbers characterize this
 platform honestly rather than pretending otherwise.
 
+**7. A published hyperparameter carried a hidden assumption.** The PointPillars
+paper's P = 12,000 pillar cap presumes points are pre-filtered to the front
+camera frustum. This pipeline keeps the full ROI, where real KITTI frames occupy
+min 6,710 / mean 11,632 / max 14,630 pillars -- so the paper's cap silently
+dropped pillars on 66.6% of frames. Nothing crashed and every unit test passed;
+only an overflow counter over 3,544 real frames surfaced it. The cap is now
+30,000 and overflow is observable through the API rather than silent.
+
 ## Stages
 
 **Motion compensation.** A spinning LiDAR takes ~100 ms per revolution, during
@@ -84,6 +98,14 @@ self-hits. Output size is unknown until the kernel runs, so threads claim output
 slots atomically. Both naive and warp-aggregated variants are kept and
 benchmarked (see finding 3). At the default ROI this keeps 99.4% of points --
 its job is ego-point removal, not decimation.
+
+**Pillar scatter.** Builds the (P, 32, 9) feature tensor a PointPillars encoder
+consumes, with per-point offsets from both the pillar's point centroid and its
+geometric centre. Unlike the voxel grid, the pillar grid is dense and bounded
+(432 x 496 = 214,272 cells), so a flat index array replaces the hash table --
+use the simpler structure when the domain allows it. 230.1 us p50 over 3,544
+frames; the count readback costs a further 85.6 us, so the pipeline exposes an
+async path that leaves the count on the device.
 
 **Voxel downsample.** Open-addressing hash grid with atomicCAS insertion,
 Fibonacci hashing, and linear probing at a load factor of 0.5. The table is
@@ -151,6 +173,5 @@ the cost-model sweep).
 
 - CUDA Graphs to amortize the measured 7.2 us per-launch overhead across the chain
 - SoA point layout for the streaming stages, benchmarked against the current AoS
-- Pillar scatter to a BEV tensor, for handoff to a PointPillars-style detector
 - Validation on a dedicated Linux host with locked clocks, to separate kernel
   behaviour from platform jitter
