@@ -28,6 +28,7 @@ target_compile_options(gpulidar_core PRIVATE -Wall -Wextra -O3)
 
 add_library(gpulidar_cuda
   src/cuda/undistort.cu
+  src/cuda/crop_box.cu
 )
 target_include_directories(gpulidar_cuda PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(gpulidar_cuda PUBLIC gpulidar_core)
@@ -43,6 +44,9 @@ target_link_libraries(kitti_probe PRIVATE gpulidar_core)
 
 add_executable(bench_bandwidth tools/bench_bandwidth.cu)
 target_link_libraries(bench_bandwidth PRIVATE gpulidar_cuda)
+
+add_executable(bench_crop tools/bench_crop.cu)
+target_link_libraries(bench_crop PRIVATE gpulidar_cuda)
 
 add_executable(bench_undistort tools/bench_undistort.cu)
 target_link_libraries(bench_undistort PRIVATE gpulidar_cuda)

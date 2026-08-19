@@ -18,3 +18,7 @@ add_test(NAME undistort COMMAND test_undistort)
 add_executable(test_gpu_undistort test_gpu_undistort.cu)
 target_link_libraries(test_gpu_undistort PRIVATE gpulidar_cuda GTest::gtest_main)
 add_test(NAME gpu_undistort COMMAND test_gpu_undistort)
+
+add_executable(test_gpu_crop test_gpu_crop.cu)
+target_link_libraries(test_gpu_crop PRIVATE gpulidar_cuda GTest::gtest_main)
+add_test(NAME gpu_crop COMMAND test_gpu_crop)
