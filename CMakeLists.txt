@@ -26,11 +26,26 @@ add_library(gpulidar_core
 target_include_directories(gpulidar_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_options(gpulidar_core PRIVATE -Wall -Wextra -O3)
 
+add_library(gpulidar_cuda
+  src/cuda/undistort.cu
+)
+target_include_directories(gpulidar_cuda PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(gpulidar_cuda PUBLIC gpulidar_core)
+# -lineinfo so Nsight can map stalls back to source lines. No fast-math:
+# correctness first, then measure whether the intrinsics buy anything.
+target_compile_options(gpulidar_cuda PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-lineinfo>)
+
 add_executable(device_info src/cuda/device_info.cu)
 target_include_directories(device_info PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_executable(kitti_probe tools/kitti_probe.cpp)
 target_link_libraries(kitti_probe PRIVATE gpulidar_core)
+
+add_executable(bench_bandwidth tools/bench_bandwidth.cu)
+target_link_libraries(bench_bandwidth PRIVATE gpulidar_cuda)
+
+add_executable(bench_undistort tools/bench_undistort.cu)
+target_link_libraries(bench_undistort PRIVATE gpulidar_cuda)
 
 if(GPULIDAR_BUILD_TESTS)
   enable_testing()

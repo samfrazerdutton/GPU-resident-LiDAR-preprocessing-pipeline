@@ -14,3 +14,7 @@ add_test(NAME cpu_filters COMMAND test_cpu_filters)
 add_executable(test_undistort test_undistort.cpp)
 target_link_libraries(test_undistort PRIVATE gpulidar_core GTest::gtest_main)
 add_test(NAME undistort COMMAND test_undistort)
+
+add_executable(test_gpu_undistort test_gpu_undistort.cu)
+target_link_libraries(test_gpu_undistort PRIVATE gpulidar_cuda GTest::gtest_main)
+add_test(NAME gpu_undistort COMMAND test_gpu_undistort)
